@@ -137,6 +137,10 @@
     <ClInclude Include="gg.h" />
     <ClInclude Include="GgApplication.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="mesh.frag" />
+    <None Include="mesh.vert" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
