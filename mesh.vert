@@ -5,16 +5,20 @@
 //
 
 // テクスチャ
-uniform sampler2D image;
+uniform sampler2D image0, image1;
 
 // テクスチャのサイズ
-vec2 size = vec2(textureSize(image, 0));
+vec2 size0 = vec2(textureSize(image0, 0));
+vec2 size1 = vec2(textureSize(image1, 0));
 
 // 格子間隔（格子点数の逆数）
 uniform vec2 spacing;
 
+// モデルビュー投影変換行列
+uniform mat4 mc;
+
 // テクスチャ座標
-out vec2 texcoord;
+out vec2 texcoord0, texcoord1;
 
 void main(void)
 {
@@ -28,8 +32,9 @@ void main(void)
 	vec2 p = vec2(gl_VertexID >> 1, (gl_VertexID & 1) + gl_InstanceID) * spacing;
 
 	// 各画素の中央におけるテクスチャ座標
-	texcoord = (size * p - p + 0.5) / size;
+	texcoord0 = (size0 * p - p + 0.5) / size0;
+	texcoord1 = (size1 * p - p + 0.5) / size1;
 
 	// メッシュの頂点座標
-	gl_Position = vec4(p * vec2(2.0, -2.0) - vec2(1.0, -1.0), 0.0, 1.0);
+	gl_Position = mc * vec4(p * vec2(2.0, -2.0) - vec2(1.0, -1.0), 0.0, 1.0);
 }
