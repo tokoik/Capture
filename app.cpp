@@ -48,6 +48,7 @@ static void makeSphere(float radius, int slices, int stacks,
       ++k;
     }
   }
+}
 
 //
 // アプリケーションの実行
