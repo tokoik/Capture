@@ -9,6 +9,46 @@ constexpr int slices(1), stacks(1);
 
 // ビューポートのサイズ
 constexpr int width(800), height(450);
+
+//
+// 球のデータの作成
+//
+static void makeSphere(float radius, int slices, int stacks,
+  GLfloat(*pv)[3], GLfloat(*nv)[3], GLfloat(*tv)[2], GLuint(*f)[3])
+{
+  // 頂点の位置とテクスチャ座標を求める
+  for (int k = 0, j = 0; j <= stacks; ++j)
+  {
+    const float t(static_cast<float>(j) / static_cast<float>(stacks));
+    const float ph(3.141593f * t);
+    const float y(cos(ph));
+    const float r(sin(ph));
+
+    for (int i = 0; i <= slices; ++i)
+    {
+      const float s(static_cast<float>(i) / static_cast<float>(slices));
+      const float th(-2.0f * 3.141593f * s);
+      const float x(r * cos(th));
+      const float z(r * sin(th));
+
+      // 頂点の座標値
+      pv[k][0] = x * radius;
+      pv[k][1] = y * radius;
+      pv[k][2] = z * radius;
+
+      // 頂点の法線ベクトル
+      nv[k][0] = x;
+      nv[k][1] = y;
+      nv[k][2] = z;
+
+      // 頂点のテクスチャ座標値
+      tv[k][0] = s;
+      tv[k][1] = t;
+
+      ++k;
+    }
+  }
+
 //
 // アプリケーションの実行
 //
