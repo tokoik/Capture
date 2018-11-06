@@ -49,5 +49,11 @@
     <None Include="mesh.frag">
       <Filter>シェーダー ファイル</Filter>
     </None>
+    <None Include="sphere.vert">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
+    <None Include="sphere.frag">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
   </ItemGroup>
 </Project>
