@@ -16,7 +16,7 @@ const float kshi  = 40.0;                           // 輝き係数
 in vec3 n;                                          // 補間された法線ベクトル
 in vec3 l;                                          // 補間された光線ベクトル
 in vec3 h;                                          // 補間された中間ベクトル
-in vec2 tc;                                         // 補間されたテクスチャ座標
+in vec4 tc;                                         // 補間されたテクスチャ座標
 
 // テクスチャ座標のサンプラ
 uniform sampler2D color;                            // カラーマップ
@@ -34,17 +34,9 @@ void main(void)
   vec4 idiff = max(dot(nn, nl), 0.0) * kdiff * ldiff;
   vec4 ispec = pow(max(dot(nn, nh), 0.0), kshi) * kspec * lspec;
 
-  // 左側のメッシュの中心からの変異
-  vec2 d = tc - vec2(0.5, 0.5);
-
-  // 左側のメッシュの中心からの距離
-  float l = length(d);
-
-  // 左側のメッシュの中心からの角度
-  float a = asin(l / 0.5);
-
-  // 左側の魚眼画像のテクスチャ座標
-  vec2 t = a * d * vec2(0.5, 640.0 / 720.0) / (3.1415927 * l) + vec2(0.25, 0.5);
-
-  fc = (iamb + idiff) * texture(color, t) + ispec;
+  vec4 c0 = texture(color, tc.xz);
+  vec4 c1 = texture(color, tc.yz);
+  float b = smoothstep(-0.02, 0.02, tc.w);
+  vec4 c = mix(c0, c1, b);
+  fc = (iamb + idiff) * c + ispec;
 }

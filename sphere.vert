@@ -18,7 +18,7 @@ uniform mat4 mg;                                    // 法線ベクトルの変�
 out vec3 n;                                         // 頂点の法線ベクトル
 out vec3 l;                                         // 光線ベクトル
 out vec3 h;                                         // 中間ベクトル
-out vec2 tc;                                        // テクスチャ座標
+out vec4 tc;                                        // テクスチャ座標
 
 void main(void)
 {
@@ -28,7 +28,12 @@ void main(void)
   n = normalize((mg * nv).xyz);                     // 法線ベクトル
   l = normalize((pl * p.w - p * pl.w).xyz);         // 光線ベクトル
   h = normalize(l + v);                             // 中間ベクトル
-  tc = tv;                                          // テクスチャ座標
+
+  vec2 d = acos(abs(pv.z)) * normalize(pv.xy) / 1.775;
+  tc.x = (1.0 + d.x) * 0.25;
+  tc.y = (1.0 - d.x) * 0.25 + 0.5;
+  tc.z = (1.0 - d.y) * 4.0 / 9.0;
+  tc.w = pv.z;
 
   gl_Position = mp * p;
 }

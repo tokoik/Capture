@@ -53,8 +53,16 @@ static void makeSphere(float radius, int slices, int stacks,
 			nv[k][2] = z;
 
 			// 頂点のテクスチャ座標値
-			tv[k][0] = s * 2.0f;
-			tv[k][1] = t;
+			const float d(acos(abs(z)) / (hypot(x, y) * 1.8f));
+			if (z > 0.0f)
+			{
+				tv[k][0] = (1.0f + x * d) * 0.25f;
+			}
+			else
+			{
+				tv[k][0] = (1.0f - x * d) * 0.25f + 0.5f;
+			}
+			tv[k][1] = (1.0f - y * d) * 4.0f / 9.0f;
 
 			++k;
 		}
@@ -237,7 +245,7 @@ void GgApplication::run()
 		const float t(static_cast<float>(fmod(glfwGetTime(), cycle) / cycle));
 
 		// モデルビュー変換行列 (時刻 t にもとづく回転アニメーション)
-		const GgMatrix mw(mv.rotateY(3.1415927f * 1.0f));
+		const GgMatrix mw(mv * window.getTrackball());
 
 		// 法線変換行列
 		const GgMatrix mg(mw.normal());
