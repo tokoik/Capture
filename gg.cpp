@@ -2912,8 +2912,7 @@ GLuint gg::ggLoadTexture(const GLvoid *image, GLsizei width, GLsizei height,
   GLenum format, GLenum type, GLenum internal, GLenum wrap)
 {
   // テクスチャオブジェクト
-  GLuint tex;
-  glGenTextures(1, &tex);
+  const GLuint tex([] { GLuint tex;  glGenTextures(1, &tex); return tex; } ());
   glBindTexture(GL_TEXTURE_2D, tex);
 
   // アルファチャンネルがついていれば 4 バイト境界に設定する
@@ -4035,47 +4034,6 @@ GLuint gg::ggCreateShader(const char *vsrc, const char *fsrc, const char *gsrc,
 }
 
 /*
-** コンピュートシェーダのソースプログラムの文字列を読み込んでプログラムオブジェクトを作成する
-**
-**   csrc コンピュートシェーダのソースプログラムの文字列
-**   戻り値 プログラムオブジェクトのプログラム名 (作成できなければ 0)
-*/
-GLuint gg::ggCreateComputeShader(const char *csrc, const char *ctext)
-{
-  // シェーダプログラムの作成
-  const GLuint program(glCreateProgram());
-
-  if (program > 0)
-  {
-    if (csrc)
-    {
-      // コンピュートシェーダのシェーダオブジェクトを作成する
-      const GLuint compShader(glCreateShader(GL_COMPUTE_SHADER));
-      glShaderSource(compShader, 1, &csrc, nullptr);
-      glCompileShader(compShader);
-
-      // コンピュートシェーダのシェーダオブジェクトをプログラムオブジェクトに組み込む
-      if (printShaderInfoLog(compShader, ctext))
-        glAttachShader(program, compShader);
-      glDeleteShader(compShader);
-    }
-
-    // シェーダプログラムをリンクする
-    glLinkProgram(program);
-
-    // プログラムオブジェクトが作成できなければ 0 を返す
-    if (printProgramInfoLog(program) == GL_FALSE)
-    {
-      glDeleteProgram(program);
-      return 0;
-    }
-  }
-
-  // プログラムオブジェクトを返す
-  return program;
-}
-
-/*
 ** シェーダのソースファイルを読み込んだ vector を返す
 **
 **   name ソースファイル名
@@ -4149,6 +4107,48 @@ GLuint gg::ggLoadShader(const char *vert, const char *frag, const char *geom,
   return 0;
 }
 
+#if !defined(__APPLE__)
+/*
+** コンピュートシェーダのソースプログラムの文字列を読み込んでプログラムオブジェクトを作成する
+**
+**   csrc コンピュートシェーダのソースプログラムの文字列
+**   戻り値 プログラムオブジェクトのプログラム名 (作成できなければ 0)
+*/
+GLuint gg::ggCreateComputeShader(const char *csrc, const char *ctext)
+{
+  // シェーダプログラムの作成
+  const GLuint program(glCreateProgram());
+
+  if (program > 0)
+  {
+    if (csrc)
+    {
+      // コンピュートシェーダのシェーダオブジェクトを作成する
+      const GLuint compShader(glCreateShader(GL_COMPUTE_SHADER));
+      glShaderSource(compShader, 1, &csrc, nullptr);
+      glCompileShader(compShader);
+
+      // コンピュートシェーダのシェーダオブジェクトをプログラムオブジェクトに組み込む
+      if (printShaderInfoLog(compShader, ctext))
+        glAttachShader(program, compShader);
+      glDeleteShader(compShader);
+    }
+
+    // シェーダプログラムをリンクする
+    glLinkProgram(program);
+
+    // プログラムオブジェクトが作成できなければ 0 を返す
+    if (printProgramInfoLog(program) == GL_FALSE)
+    {
+      glDeleteProgram(program);
+      return 0;
+    }
+  }
+
+  // プログラムオブジェクトを返す
+  return program;
+}
+
 /*
 ** コンピュートシェーダのソースファイルを読み込んでプログラムオブジェクトを作成する
 **
@@ -4168,6 +4168,7 @@ GLuint gg::ggLoadComputeShader(const char *comp)
   // プログラムオブジェクト作成失敗
   return 0;
 }
+#endif
 
 /*
 ** 3 要素の長さ
@@ -5264,7 +5265,7 @@ gg::GgElements *gg::ggElementsSphere(GLfloat radius, int slices, int stacks)
 **   first 値を設定する光源データの最初の番号, デフォルトは 0
 **   count 値を設定する光源データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::LightBuffer::loadLightAmbient(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
+void gg::GgSimpleShader::LightBuffer::loadAmbient(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5293,7 +5294,7 @@ void gg::GgSimpleShader::LightBuffer::loadLightAmbient(GLfloat r, GLfloat g, GLf
 **   first 値を設定する光源データの最初の番号, デフォルトは 0
 **   count 値を設定する光源データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::LightBuffer::loadLightDiffuse(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
+void gg::GgSimpleShader::LightBuffer::loadDiffuse(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5322,7 +5323,7 @@ void gg::GgSimpleShader::LightBuffer::loadLightDiffuse(GLfloat r, GLfloat g, GLf
 **   first 値を設定する光源データの最初の番号, デフォルトは 0
 **   count 値を設定する光源データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::LightBuffer::loadLightSpecular(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
+void gg::GgSimpleShader::LightBuffer::loadSpecular(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5348,7 +5349,7 @@ void gg::GgSimpleShader::LightBuffer::loadLightSpecular(GLfloat r, GLfloat g, GL
 **   first 値を設定する光源データの最初の番号, デフォルトは 0
 **   count 値を設定する光源データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::LightBuffer::loadLightMaterial(const Light &material,
+void gg::GgSimpleShader::LightBuffer::loadColor(const Light &color,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5359,9 +5360,9 @@ void gg::GgSimpleShader::LightBuffer::loadLightMaterial(const Light &material,
     Light *const light(reinterpret_cast<Light *>(start + getStride() * i));
 
     // 光源の色を設定する
-    light->ambient = material.ambient;
-    light->diffuse = material.diffuse;
-    light->specular = material.specular;
+    light->ambient = color.ambient;
+    light->diffuse = color.diffuse;
+    light->specular = color.specular;
   }
   unmap();
 }
@@ -5376,7 +5377,7 @@ void gg::GgSimpleShader::LightBuffer::loadLightMaterial(const Light &material,
 **   first 値を設定する光源データの最初の番号, デフォルトは 0
 **   count 値を設定する光源データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::LightBuffer::loadLightPosition(GLfloat x, GLfloat y, GLfloat z, GLfloat w,
+void gg::GgSimpleShader::LightBuffer::loadPosition(GLfloat x, GLfloat y, GLfloat z, GLfloat w,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5402,7 +5403,7 @@ void gg::GgSimpleShader::LightBuffer::loadLightPosition(GLfloat x, GLfloat y, GL
 **   first 値を設定する光源データの最初の番号, デフォルトは 0
 **   count 値を設定する光源データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::LightBuffer::loadLightPosition(const GgVector &position,
+void gg::GgSimpleShader::LightBuffer::loadPosition(const GgVector &position,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5428,7 +5429,7 @@ void gg::GgSimpleShader::LightBuffer::loadLightPosition(const GgVector &position
 **   first 値を設定する材質データの最初の番号, デフォルトは 0
 **   count 値を設定する材質データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::MaterialBuffer::loadMaterialAmbient(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
+void gg::GgSimpleShader::MaterialBuffer::loadAmbient(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5457,7 +5458,7 @@ void gg::GgSimpleShader::MaterialBuffer::loadMaterialAmbient(GLfloat r, GLfloat 
 **   first 値を設定する材質データの最初の番号, デフォルトは 0
 **   count 値を設定する材質データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::MaterialBuffer::loadMaterialDiffuse(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
+void gg::GgSimpleShader::MaterialBuffer::loadDiffuse(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5486,7 +5487,7 @@ void gg::GgSimpleShader::MaterialBuffer::loadMaterialDiffuse(GLfloat r, GLfloat 
 **   first 値を設定する材質データの最初の番号, デフォルトは 0
 **   count 値を設定する材質データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::MaterialBuffer::loadMaterialAmbientAndDiffuse(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
+void gg::GgSimpleShader::MaterialBuffer::loadAmbientAndDiffuse(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5512,7 +5513,7 @@ void gg::GgSimpleShader::MaterialBuffer::loadMaterialAmbientAndDiffuse(GLfloat r
 **   first 値を設定する材質データの最初の番号, デフォルトは 0
 **   count 値を設定する材質データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::MaterialBuffer::loadMaterialAmbientAndDiffuse(const GLfloat *color,
+void gg::GgSimpleShader::MaterialBuffer::loadAmbientAndDiffuse(const GLfloat *color,
   GLint first, GLsizei count) const
 {
   // ambient 要素のバイトオフセット
@@ -5555,7 +5556,7 @@ void gg::GgSimpleShader::MaterialBuffer::loadMaterialAmbientAndDiffuse(const GLf
 **   first 値を設定する材質データの最初の番号, デフォルトは 0
 **   count 値を設定する材質データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::MaterialBuffer::loadMaterialSpecular(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
+void gg::GgSimpleShader::MaterialBuffer::loadSpecular(GLfloat r, GLfloat g, GLfloat b, GLfloat a,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5581,7 +5582,7 @@ void gg::GgSimpleShader::MaterialBuffer::loadMaterialSpecular(GLfloat r, GLfloat
 **   first 値を設定する材質データの最初の番号, デフォルトは 0
 **   count 値を設定する材質データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::MaterialBuffer::loadMaterialShininess(GLfloat shininess,
+void gg::GgSimpleShader::MaterialBuffer::loadShininess(GLfloat shininess,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5602,7 +5603,7 @@ void gg::GgSimpleShader::MaterialBuffer::loadMaterialShininess(GLfloat shininess
 **   first 値を設定する材質データの最初の番号, デフォルトは 0
 **   count 値を設定する材質データの数, デフォルトは 1
 */
-void gg::GgSimpleShader::MaterialBuffer::loadMaterialShininess(const GLfloat *shininess,
+void gg::GgSimpleShader::MaterialBuffer::loadShininess(const GLfloat *shininess,
   GLint first, GLsizei count) const
 {
   // データを格納するバッファオブジェクトの先頭のポインタ
@@ -5633,13 +5634,8 @@ gg::GgSimpleShader::GgSimpleShader(const char *vert, const char *frag,
 /*
 ** Wavefront OBJ 形式のデータ：コンストラクタ
 */
-gg::GgSimpleObj::GgSimpleObj(const char *name, const GgSimpleShader *shader, bool normalize)
+gg::GgSimpleObj::GgSimpleObj(const char *name, bool normalize)
 {
-  // メンバの初期値
-  this->data = nullptr;
-  this->material = nullptr;
-  this->shader = shader;
-
   // 作業用のメモリ
   std::vector<GgSimpleShader::Material> mat;
   std::vector<GgVertex> vert;
@@ -5649,11 +5645,11 @@ gg::GgSimpleObj::GgSimpleObj(const char *name, const GgSimpleShader *shader, boo
   if (ggLoadSimpleObj(name, group, mat, vert, face, normalize))
   {
     // 頂点バッファオブジェクトを作成する
-    data = new GgElements(vert.data(), static_cast<GLsizei>(vert.size()),
-      face.data(), static_cast<GLsizei>(face.size()), GL_TRIANGLES);
+    data.reset(new GgElements(vert.data(), static_cast<GLsizei>(vert.size()),
+      face.data(), static_cast<GLsizei>(face.size()), GL_TRIANGLES));
 
     // 材質データを設定する
-    material = new GgSimpleShader::MaterialBuffer(mat.data(), static_cast<GLsizei>(mat.size()));
+    material.reset(new GgSimpleShader::MaterialBuffer(mat.data(), static_cast<GLsizei>(mat.size())));
   }
 }
 
@@ -5672,7 +5668,7 @@ void gg::GgSimpleObj::draw(GLint first, GLsizei count) const
   for (GLsizei g = first; g < last; ++g)
   {
     // 材質を設定する
-    if (shader) shader->selectMaterial(material, group[g][2]);
+    material->select(group[g][2]);
 
     // 図形を描画する
     data->draw(group[g][0], group[g][1]);

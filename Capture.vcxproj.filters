@@ -55,5 +55,11 @@
     <None Include="sphere.frag">
       <Filter>シェーダー ファイル</Filter>
     </None>
+    <None Include="disc.vert">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
+    <None Include="disc.frag">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
   </ItemGroup>
 </Project>

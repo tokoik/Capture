@@ -18,7 +18,7 @@ uniform mat4 mg;                                    // 法線ベクトルの変�
 out vec3 n;                                         // 頂点の法線ベクトル
 out vec3 l;                                         // 光線ベクトル
 out vec3 h;                                         // 中間ベクトル
-out vec4 tc;                                        // テクスチャ座標
+out vec2 tc;                                        // テクスチャ座標
 
 void main(void)
 {
@@ -30,9 +30,7 @@ void main(void)
   h = normalize(l + v);                             // 中間ベクトル
 
   tc.x = (1.0 + tv.x) * 0.25;
-  tc.y = (1.0 - tv.x) * 0.25 + 0.5;
-  tc.z = (1.0 - tv.y) * 4.0 / 9.0;
-  tc.w = pv.z;
+  tc.y = (1.0 - tv.y) * 4.0 / 9.0;
 
   gl_Position = mp * p;
 }

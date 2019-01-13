@@ -21,17 +21,17 @@ Capture::Capture()
 }
 
 // デバイスからキャプチャするコンストラクタ
-Capture::Capture(int device)
+Capture::Capture(int device, int width, int height, int fps)
 	: camera(device)
 {
-	init();
+	init(width, height, fps);
 }
 
 // ファイルからキャプチャするコンストラクタ
 Capture::Capture(const std::string &filename)
 	: camera(filename)
 {
-	init();
+	init(0, 0, 0);
 }
 
 // デストラクタ
@@ -41,24 +41,24 @@ Capture::~Capture()
 }
 
 // キャプチャ可能なら最初の 1 フレームをキャプチャする
-void Capture::init()
+void Capture::init(int width, int height, int fps)
 {
 	// カメラが使えるかどうか確かめる
-	if (!camera.isOpened()) "Can't open camera device.";
+	if (!camera.isOpened()) throw std::runtime_error("Can't open camera device.");
 
 	// カメラの解像度を設定する
-	camera.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
-	camera.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
-	camera.set(CV_CAP_PROP_FPS, 0);
+	camera.set(CV_CAP_PROP_FRAME_WIDTH, static_cast<double>(width));
+	camera.set(CV_CAP_PROP_FRAME_HEIGHT, static_cast<double>(height));
+	camera.set(CV_CAP_PROP_FPS, static_cast<double>(fps));
 
 	// カメラから最初のフレームをキャプチャする
-	if (!camera.grab()) throw "Can't capture first frame.";
+  if (!camera.grab()) throw std::runtime_error("Can't capture first frame.");
 
 	// フレームを取り出す
 	camera.retrieve(frame, 3);
 
 	// フレームが取り出せたかどうか確かめる
-	if (!frame.data) throw "Can't retrieve first frame.";
+	if (!frame.data) throw std::runtime_error("Can't retrieve first frame.");
 
 	// 色データのテクスチャを作成する
 	glGenTextures(1, &texture);
@@ -75,17 +75,17 @@ void Capture::init()
 }
 
 // デバイスを開く
-void Capture::open(int device)
+void Capture::open(int device, int width, int height, int fps)
 {
 	camera.open(device);
-	init();
+	init(width, height, fps);
 }
 
 // ファイルを開く
 void Capture::open(const std::string &filename)
 {
 	camera.open(filename);
-	init();
+	init(0, 0, 0);
 }
 
 // 1 フレームキャプチャしてテクスチャに転送する

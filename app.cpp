@@ -4,6 +4,10 @@
 // ビデオキャプチャ
 #include "Capture.h"
 
+// 標準ライブラリ
+#include <array>
+#include <vector>
+
 // メッシュの高さと幅
 constexpr int meshSlices(1), meshStacks(1);
 
@@ -17,18 +21,43 @@ constexpr double cycle(5.0);
 constexpr int slices(64);
 constexpr int stacks(32);
 
-// 球のデータの頂点数と面数
-constexpr int vertices((slices + 1) * (stacks + 1));
-constexpr int faces(slices * stacks * 2);
+// データ型
+struct vec2
+{
+  GLfloat x, y;
+  vec2() {}
+  vec2(GLfloat x, GLfloat y) : x(x), y(y) {}
+};
+struct vec3
+{
+  GLfloat x, y, z;
+  vec3() {}
+  vec3(GLfloat x, GLfloat y, GLfloat z) : x(x), y(y), z(z) {}
+};
+struct vec4
+{
+  GLfloat x, y, z, w;
+  vec4() {}
+  vec4(GLfloat x, GLfloat y) : x(x), y(y), z(z), w(w) {}
+};
+struct idx
+{
+  GLuint i0, i1, i2;
+  idx() {}
+  idx(GLuint i0, GLuint i1, GLuint i2) : i0(i0), i1(i1), i2(i2) {}
+};
 
 //
 // 球のデータの作成
 //
 static void makeSphere(float radius, int slices, int stacks,
-	GLfloat(*pv)[3], GLfloat(*nv)[3], GLfloat(*tv)[2], GLuint(*f)[3])
+  std::vector<vec3> &position,
+  std::vector<vec3> &normal,
+  std::vector<vec2> &texture,
+  std::vector<idx> &face)
 {
 	// 頂点の位置とテクスチャ座標を求める
-	for (int k = 0, j = 0; j <= stacks; ++j)
+	for (int j = 0; j <= stacks; ++j)
 	{
 		const float t(static_cast<float>(j) / static_cast<float>(stacks));
 		const float ph(3.141593f * t);
@@ -43,51 +72,93 @@ static void makeSphere(float radius, int slices, int stacks,
 			const float z(r * sin(th));
 
 			// 頂点の座標値
-			pv[k][0] = x * radius;
-			pv[k][1] = y * radius;
-			pv[k][2] = z * radius;
+      position.emplace_back(x * radius, y * radius, z * radius);
 
 			// 頂点の法線ベクトル
-			nv[k][0] = x;
-			nv[k][1] = y;
-			nv[k][2] = z;
+      normal.emplace_back(x, y, z);
 
 			// 頂点のテクスチャ座標値
-			const float d(acos(abs(z)) / (hypot(x, y) * 1.8f));
-			if (z > 0.0f)
-			{
-				tv[k][0] = (1.0f + x * d) * 0.25f;
-			}
-			else
-			{
-				tv[k][0] = (1.0f - x * d) * 0.25f + 0.5f;
-			}
-			tv[k][1] = (1.0f - y * d) * 4.0f / 9.0f;
-
-			++k;
+			const float d(acos(abs(z)) / (hypot(x, y) * 1.775f));
+      texture.emplace_back(x * d, y * d);
 		}
 	}
 
 	// 面の指標を求める
-	for (int k = 0, j = 0; j < stacks; ++j)
+	for (int j = 0; j < stacks; ++j)
 	{
 		for (int i = 0; i < slices; ++i)
 		{
 			const int count((slices + 1) * j + i);
 
 			// 上半分の三角形
-			f[k][0] = count;
-			f[k][1] = count + slices + 2;
-			f[k][2] = count + 1;
-			++k;
+      face.emplace_back(count, count + slices + 2, count + 1);
 
 			// 下半分の三角形
-			f[k][0] = count;
-			f[k][1] = count + slices + 1;
-			f[k][2] = count + slices + 2;
-			++k;
+			face.emplace_back(count, count + slices + 1, count + slices + 2);
 		}
 	}
+}
+
+//
+// 正距方位法の円盤データの作成
+//
+static void makeDisc(float radius, float xoffset, float yoffset, int slices, int stacks,
+  std::vector<vec3> &position,
+  std::vector<vec3> &normal,
+  std::vector<vec2> &texture,
+  std::vector<idx> &face)
+{
+  // 最初の頂点番号
+  const int start(static_cast<int>(position.size()));
+
+  // テクスチャのオフセット
+  const float toffset(xoffset / radius);
+
+  // 頂点の位置とテクスチャ座標を求める
+  for (int j = 0; j <= stacks; ++j)
+  {
+    const float t(static_cast<float>(j) / static_cast<float>(stacks));
+    const float ph(3.141593f * t);
+    const float y(cos(ph));
+    const float r(sin(ph));
+
+    for (int i = 0; i <= slices; ++i)
+    {
+      const float s(static_cast<float>(i) / static_cast<float>(slices));
+      const float th(-3.141593f * s);
+      const float x(r * cos(th));
+      const float z(r * sin(th));
+
+      // テクスチャ座標値
+      const float w(2.0f * acos(-z) / (3.141593f * hypot(x, y)));
+      const float u(-x * w), v(y * w);
+
+      // 頂点の座標値
+      position.emplace_back(u * radius + xoffset, v * radius + yoffset, 0.0f);
+
+      // 頂点の法線ベクトル
+      normal.emplace_back(0.0f, 0.0f, 1.0f);
+
+      // 頂点のテクスチャ座標値
+      const float d(acos(abs(z)) / (hypot(x, y) * 1.775f));
+      texture.emplace_back(u * d + toffset + 1.0f, v * d);
+    }
+  }
+
+  // 面の指標を求める
+  for (int j = 0; j < stacks; ++j)
+  {
+    for (int i = 0; i < slices; ++i)
+    {
+      const int count((slices + 1) * j + i + start);
+
+      // 上半分の三角形
+      face.emplace_back(count, count + slices + 2, count + 1);
+
+      // 下半分の三角形
+      face.emplace_back(count, count + slices + 1, count + slices + 2);
+    }
+  }
 }
 
 //
@@ -103,11 +174,12 @@ void GgApplication::run()
 
 	// 隠面消去を有効にする
 	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 
 	// 球体描画用のシェーダプログラムを読み込む
-	const GLuint program(ggLoadShader("sphere.vert", "sphere.frag"));
-	if (!program) throw "Can't create program object for sphere.";
+	//const GLuint program(ggLoadShader("sphere.vert", "sphere.frag"));
+  const GLuint program(ggLoadShader("disc.vert", "disc.frag"));
+  if (!program) throw std::runtime_error("Can't create program object for sphere.");
 
 	// uniform 変数のインデックスの検索（見つからなければ -1）
 	const GLint mvLoc(glGetUniformLocation(program, "mv"));
@@ -119,11 +191,16 @@ void GgApplication::run()
 	const GgMatrix mv(ggLookat(0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
 
 	// 図形データの作成
-	GLfloat pv[vertices][3];
-	GLfloat nv[vertices][3];
-	GLfloat tv[vertices][2];
-	GLuint face[faces][3];
-	makeSphere(1.0f, slices, stacks, pv, nv, tv, face);
+  std::vector<vec3> position;
+  std::vector<vec3> normal;
+  std::vector<vec2> texture;
+  std::vector<idx> face;
+#if 0
+  makeSphere(1.0f, slices, stacks, position, normal, texture, face);
+#else
+	makeDisc(0.5f, -0.5f, 0.5f, slices, stacks, position, normal, texture, face);
+  makeDisc(0.5f,  0.5f, 0.5f, slices, stacks, position, normal, texture, face);
+#endif
 
 	// 頂点配列オブジェクトの作成
 	GLuint sphere;
@@ -140,7 +217,7 @@ void GgApplication::run()
 
 	// 頂点の座標値 pv 用のバッファオブジェクト
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof pv, pv, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, position.size() * sizeof (vec3), position.data(), GL_STATIC_DRAW);
 
 	// 結合されている頂点バッファオブジェクトを in 変数 pv (index == 0) から参照できるようにする
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -148,7 +225,7 @@ void GgApplication::run()
 
 	// 頂点の法線ベクトル nv 用のバッファオブジェクト
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof nv, nv, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, normal.size() * sizeof (vec3), normal.data(), GL_STATIC_DRAW);
 
 	// 結合されている頂点バッファオブジェクトを in 変数 nv (index == nvLoc) から参照できるようにする
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -156,7 +233,7 @@ void GgApplication::run()
 
 	// 頂点のテクスチャ座標値 tv 用のバッファオブジェクト
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof tv, tv, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, texture.size() * sizeof (vec2), texture.data(), GL_STATIC_DRAW);
 
 	// 結合されている頂点バッファオブジェクトを in 変数 tv (index == tvLoc) から参照できるようにする
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
@@ -164,17 +241,11 @@ void GgApplication::run()
 
 	// 頂点のインデックス face 用のバッファオブジェクト
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[3]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof face, face, GL_STATIC_DRAW);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);  
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, face.size() * sizeof (idx), face.data(), GL_STATIC_DRAW);
 
 	// 背景描画用のシェーダプログラムを読み込む
 	const GLuint shader(ggLoadShader("mesh.vert", "mesh.frag"));
-	if (!shader) throw "Can't create program object for mesh.";
+	if (!shader) throw std::runtime_error("Can't create program object for mesh.");
 
 	// uniform 変数の場所を指定する
 	const GLuint image0Loc(glGetUniformLocation(shader, "image0"));
@@ -190,13 +261,13 @@ void GgApplication::run()
 	const GgMatrix mc(ggIdentity());
 
 	// ビデオ入力
-	Capture video0(0), video1(1);
+	Capture video0(0, 1280, 720), video1(2, 1280, 720);
 
 	// 経過時間のリセット
 	glfwSetTime(0.0);
 
-	// ウィンドウが開いている間繰り返す
-	while (window.shouldClose() == GL_FALSE)
+  // ウィンドウが開いている間繰り返す
+	while (window)
 	{
 		//
 		// ビデオのキャプチャ
@@ -263,7 +334,7 @@ void GgApplication::run()
 		glBindVertexArray(sphere);
 
 		// 図形の描画
-		glDrawElements(GL_TRIANGLES, faces * 3, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(face.size()) * 3, GL_UNSIGNED_INT, 0);
 
 #endif
 
