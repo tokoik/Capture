@@ -8,18 +8,17 @@
 #include <array>
 #include <vector>
 
-// メッシュの高さと幅
-constexpr int meshSlices(1), meshStacks(1);
-
 // ビューポートのサイズ
 constexpr int width(800), height(450);
 
 // アニメーションの周期（秒）
 constexpr double cycle(5.0);
 
-// 球のデータの分割数
-constexpr int slices(64);
-constexpr int stacks(32);
+// 球のメッシュの分割数
+constexpr int sphereSlices(64), sphereStacks(32);
+
+// 平面のメッシュの分割数
+constexpr int meshSlices(1), meshStacks(1);
 
 // データ型
 struct vec2
@@ -174,102 +173,64 @@ void GgApplication::run()
 
 	// 隠面消去を有効にする
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
 
 	// 球体描画用のシェーダプログラムを読み込む
-	//const GLuint program(ggLoadShader("sphere.vert", "sphere.frag"));
-  const GLuint program(ggLoadShader("disc.vert", "disc.frag"));
-  if (!program) throw std::runtime_error("Can't create program object for sphere.");
+  //const GLuint sphereShader(ggLoadShader("sphere.vert", "sphere.frag"));
+  const GLuint sphereShader(ggLoadShader("disc.vert", "disc.frag"));
+  if (!sphereShader) throw std::runtime_error("Can't create program object for sphere.");
 
 	// uniform 変数のインデックスの検索（見つからなければ -1）
-	const GLint mvLoc(glGetUniformLocation(program, "mv"));
-	const GLint mpLoc(glGetUniformLocation(program, "mp"));
-	const GLint mgLoc(glGetUniformLocation(program, "mg"));
-	const GLint colorLoc(glGetUniformLocation(program, "color"));
+  const GLint sphereSpacingLoc(glGetUniformLocation(sphereShader, "spacing"));
+  const GLint radiusLoc(glGetUniformLocation(sphereShader, "radius"));
+  const GLint centerLoc(glGetUniformLocation(sphereShader, "center"));
+  const GLint scaleLoc(glGetUniformLocation(sphereShader, "scale"));
+  const GLint offsetLoc(glGetUniformLocation(sphereShader, "offset"));
+  const GLint deltaLoc(glGetUniformLocation(sphereShader, "delta"));
+  const GLint mvLoc(glGetUniformLocation(sphereShader, "mv"));
+	const GLint mpLoc(glGetUniformLocation(sphereShader, "mp"));
+	const GLint mgLoc(glGetUniformLocation(sphereShader, "mg"));
+	const GLint color0Loc(glGetUniformLocation(sphereShader, "color0"));
+  const GLint color1Loc(glGetUniformLocation(sphereShader, "color1"));
 
-	// 球のビュー変換行列を mv に求める
-	const GgMatrix mv(ggLookat(0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
+  // テクスチャをマッピングする球状のメッシュを作成する
+  const GLuint sphere([]() { GLuint sphere; glGenVertexArrays(1, &sphere); return sphere; } ());
 
-	// 図形データの作成
-  std::vector<vec3> position;
-  std::vector<vec3> normal;
-  std::vector<vec2> texture;
-  std::vector<idx> face;
-#if 0
-  makeSphere(1.0f, slices, stacks, position, normal, texture, face);
-#else
-	makeDisc(0.5f, -0.5f, 0.5f, slices, stacks, position, normal, texture, face);
-  makeDisc(0.5f,  0.5f, 0.5f, slices, stacks, position, normal, texture, face);
-#endif
+  // 球のビュー変換行列
+  const GgMatrix mv(ggLookat(0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
 
-	// 頂点配列オブジェクトの作成
-	GLuint sphere;
-	glGenVertexArrays(1, &sphere);
-	glBindVertexArray(sphere);
-
-	// 頂点バッファオブジェクトの作成
-	GLuint vbo[4];
-	glGenBuffers(sizeof vbo / sizeof vbo[0], vbo);
-
-	GLuint tex;
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-
-	// 頂点の座標値 pv 用のバッファオブジェクト
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, position.size() * sizeof (vec3), position.data(), GL_STATIC_DRAW);
-
-	// 結合されている頂点バッファオブジェクトを in 変数 pv (index == 0) から参照できるようにする
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
-
-	// 頂点の法線ベクトル nv 用のバッファオブジェクト
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, normal.size() * sizeof (vec3), normal.data(), GL_STATIC_DRAW);
-
-	// 結合されている頂点バッファオブジェクトを in 変数 nv (index == nvLoc) から参照できるようにする
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(1);
-
-	// 頂点のテクスチャ座標値 tv 用のバッファオブジェクト
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
-	glBufferData(GL_ARRAY_BUFFER, texture.size() * sizeof (vec2), texture.data(), GL_STATIC_DRAW);
-
-	// 結合されている頂点バッファオブジェクトを in 変数 tv (index == tvLoc) から参照できるようにする
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(2);
-
-	// 頂点のインデックス face 用のバッファオブジェクト
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[3]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, face.size() * sizeof (idx), face.data(), GL_STATIC_DRAW);
-
-	// 背景描画用のシェーダプログラムを読み込む
-	const GLuint shader(ggLoadShader("mesh.vert", "mesh.frag"));
-	if (!shader) throw std::runtime_error("Can't create program object for mesh.");
+  // 背景描画用のシェーダプログラムを読み込む
+	const GLuint meshShader(ggLoadShader("mesh.vert", "mesh.frag"));
+	if (!meshShader) throw std::runtime_error("Can't create program object for mesh.");
 
 	// uniform 変数の場所を指定する
-	const GLuint image0Loc(glGetUniformLocation(shader, "image0"));
-	const GLuint image1Loc(glGetUniformLocation(shader, "image1"));
-	const GLuint spacingLoc(glGetUniformLocation(shader, "spacing"));
-	const GLuint mcLoc(glGetUniformLocation(shader, "mc"));
+	const GLuint meshSpacingLoc(glGetUniformLocation(meshShader, "spacing"));
+	const GLuint mcLoc(glGetUniformLocation(meshShader, "mc"));
+  const GLuint image0Loc(glGetUniformLocation(meshShader, "image0"));
+  const GLuint image1Loc(glGetUniformLocation(meshShader, "image1"));
 
-	// テクスチャをマッピングするメッシュを作成する
-	//   頂点座標値を vertex shader で生成するので VBO は必要ない
+	// テクスチャをマッピングする平面状のメッシュを作成する
 	const GLuint mesh([]() { GLuint mesh; glGenVertexArrays(1, &mesh); return mesh; } ());
 
 	// 背景のモデルビュー投影変換行列
 	const GgMatrix mc(ggIdentity());
 
 	// ビデオ入力
-	Capture video0(0, 1280, 720), video1(2, 1280, 720);
+	Capture video0(2, 1280, 720), video1(0, 1280, 720);
 
 	// 経過時間のリセット
 	glfwSetTime(0.0);
 
+  // フレーム数
+  int frames = 0;
+
   // ウィンドウが開いている間繰り返す
 	while (window)
 	{
-		//
+    // 時刻の計測
+    const float t(static_cast<float>(fmod(glfwGetTime(), cycle) / cycle));
+
+    //
 		// ビデオのキャプチャ
 		//
 
@@ -285,35 +246,32 @@ void GgApplication::run()
 		// 図形の描画
 		//
 
-		// 画面を消去する
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // 画面を消去する
+		if (frames == 0) glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 #if 0
 
 		// シェーダプログラムの使用を開始する
-		glUseProgram(shader);
-
-		// テクスチャユニットを指定する
-		glUniform1i(image0Loc, 0);
-		glUniform1i(image1Loc, 1);
+		glUseProgram(meshShader);
 
 		// メッシュの格子間隔を指定する
-		glUniform2f(spacingLoc, 1.0f / meshSlices, 1.0f / meshStacks);
+		glUniform2f(meshSpacingLoc, 1.0f / meshSlices, 1.0f / meshStacks);
 
-		// モデルビュー投影変換行列を指定する
+    // モデルビュー投影変換行列を指定する
 		glUniformMatrix4fv(mcLoc, 1, GL_FALSE, mc.get());
 
-		// メッシュを描画する
+    // テクスチャユニットを指定する
+    glUniform1i(image0Loc, 0);
+    glUniform1i(image1Loc, 1);
+
+    // メッシュを描画する
 		glBindVertexArray(mesh);
 		glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, (meshSlices + 1) * 2, meshStacks);
 
 #else
 
 		// シェーダプログラムの使用開始
-		glUseProgram(program);
-
-		// 時刻の計測
-		const float t(static_cast<float>(fmod(glfwGetTime(), cycle) / cycle));
+		glUseProgram(sphereShader);
 
 		// モデルビュー変換行列 (時刻 t にもとづく回転アニメーション)
 		const GgMatrix mw(mv * window.getTrackball());
@@ -325,16 +283,26 @@ void GgApplication::run()
 		const GgMatrix mp(ggPerspective(0.5f, window.getAspect(), 1.0f, 15.0f));
 
 		// uniform 変数を設定する
-		glUniformMatrix4fv(mvLoc, 1, GL_FALSE, mw.get());
+    glUniform2f(sphereSpacingLoc, 1.0f / sphereSlices, 1.0f / sphereStacks);
+    glUniform2f(radiusLoc, 0.5f, 0.5f);
+    glUniform2f(scaleLoc, 0.885f * 0.25f, -0.885f * 4.0f / 9.0f);
+    glUniform1f(deltaLoc, fmod(glfwGetTime(), 10.0f) * 0.1f * 3.1415926f);
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, mw.get());
 		glUniformMatrix4fv(mpLoc, 1, GL_FALSE, mp.get());
 		glUniformMatrix4fv(mgLoc, 1, GL_FALSE, mg.get());
-		glUniform1i(colorLoc, 0);
+		glUniform1i(color0Loc, 0);
+    glUniform1i(color1Loc, 1);
 
 		// 描画に使う頂点配列オブジェクトの指定
 		glBindVertexArray(sphere);
 
 		// 図形の描画
-		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(face.size()) * 3, GL_UNSIGNED_INT, 0);
+    glUniform2f(centerLoc, -0.5f, 0.0f);
+    glUniform2f(offsetLoc, 0.25f, 4.0f / 9.0f);
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, (sphereSlices + 1) * 2, sphereStacks);
+    glUniform2f(centerLoc, 0.5f, 0.0f);
+    glUniform2f(offsetLoc, 0.75f, 4.0f / 9.0f);
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, (sphereSlices + 1) * 2, sphereStacks);
 
 #endif
 

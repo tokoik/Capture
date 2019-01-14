@@ -11,7 +11,7 @@ uniform sampler2D image0, image1;
 vec2 size0 = vec2(textureSize(image0, 0));
 vec2 size1 = vec2(textureSize(image1, 0));
 
-// 格子間隔（格子点数の逆数）
+// 格子間隔
 uniform vec2 spacing;
 
 // モデルビュー投影変換行列
