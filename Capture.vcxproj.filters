@@ -58,7 +58,10 @@
     <None Include="disc.vert">
       <Filter>シェーダー ファイル</Filter>
     </None>
-    <None Include="disc.frag">
+    <None Include="discCOS.frag">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
+    <None Include="discSAD.frag">
       <Filter>シェーダー ファイル</Filter>
     </None>
   </ItemGroup>

@@ -138,8 +138,9 @@
     <ClInclude Include="GgApplication.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="disc.frag" />
     <None Include="disc.vert" />
+    <None Include="discCOS.frag" />
+    <None Include="discSAD.frag" />
     <None Include="mesh.frag" />
     <None Include="mesh.vert" />
     <None Include="sphere.frag" />

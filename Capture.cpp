@@ -63,7 +63,7 @@ void Capture::init(int width, int height, int fps)
 	// 色データのテクスチャを作成する
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.cols, frame.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, frame.data);
+  glTexStorage2D(GL_TEXTURE_2D, 4, GL_RGB8, frame.cols, frame.rows);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -103,6 +103,7 @@ void Capture::capture()
 			// テクスチャに転送して
 			glBindTexture(GL_TEXTURE_2D, texture);
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame.cols, frame.rows, GL_BGR, GL_UNSIGNED_BYTE, frame.data);
+      glGenerateMipmap(GL_TEXTURE_2D);
 
 			// 次へ
 			return;

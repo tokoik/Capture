@@ -14,6 +14,12 @@ constexpr int width(800), height(450);
 // アニメーションの周期（秒）
 constexpr double cycle(5.0);
 
+// 繰り返しのフレーム数
+constexpr int frames(400);
+
+// ずらす量の最大値
+constexpr GLfloat deltaMax(3.1415927f * 0.4f);
+
 // 球のメッシュの分割数
 constexpr int sphereSlices(64), sphereStacks(32);
 
@@ -177,7 +183,7 @@ void GgApplication::run()
 
 	// 球体描画用のシェーダプログラムを読み込む
   //const GLuint sphereShader(ggLoadShader("sphere.vert", "sphere.frag"));
-  const GLuint sphereShader(ggLoadShader("disc.vert", "disc.frag"));
+  const GLuint sphereShader(ggLoadShader("disc.vert", "discSAD.frag"));
   if (!sphereShader) throw std::runtime_error("Can't create program object for sphere.");
 
 	// uniform 変数のインデックスの検索（見つからなければ -1）
@@ -221,9 +227,6 @@ void GgApplication::run()
 	// 経過時間のリセット
 	glfwSetTime(0.0);
 
-  // フレーム数
-  int frames = 0;
-
   // ウィンドウが開いている間繰り返す
 	while (window)
 	{
@@ -247,7 +250,7 @@ void GgApplication::run()
 		//
 
     // 画面を消去する
-		if (frames == 0) glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 #if 0
 
@@ -286,7 +289,6 @@ void GgApplication::run()
     glUniform2f(sphereSpacingLoc, 1.0f / sphereSlices, 1.0f / sphereStacks);
     glUniform2f(radiusLoc, 0.5f, 0.5f);
     glUniform2f(scaleLoc, 0.885f * 0.25f, -0.885f * 4.0f / 9.0f);
-    glUniform1f(deltaLoc, fmod(glfwGetTime(), 10.0f) * 0.1f * 3.1415926f);
     glUniformMatrix4fv(mvLoc, 1, GL_FALSE, mw.get());
 		glUniformMatrix4fv(mpLoc, 1, GL_FALSE, mp.get());
 		glUniformMatrix4fv(mgLoc, 1, GL_FALSE, mg.get());
@@ -296,13 +298,27 @@ void GgApplication::run()
 		// 描画に使う頂点配列オブジェクトの指定
 		glBindVertexArray(sphere);
 
-		// 図形の描画
+    // 図形の描画
+#if 1
+    for (int frame = 0; frame < frames; ++frame)
+    {
+      glUniform1f(deltaLoc, frame * deltaMax / frames);
+      glUniform2f(centerLoc, -0.5f, 0.0f);
+      glUniform2f(offsetLoc, 0.25f, 4.0f / 9.0f);
+      glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, (sphereSlices + 1) * 2, sphereStacks);
+      glUniform2f(centerLoc, 0.5f, 0.0f);
+      glUniform2f(offsetLoc, 0.75f, 4.0f / 9.0f);
+      glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, (sphereSlices + 1) * 2, sphereStacks);
+    }
+#else
+    glUniform1f(deltaLoc, t);
     glUniform2f(centerLoc, -0.5f, 0.0f);
     glUniform2f(offsetLoc, 0.25f, 4.0f / 9.0f);
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, (sphereSlices + 1) * 2, sphereStacks);
     glUniform2f(centerLoc, 0.5f, 0.0f);
     glUniform2f(offsetLoc, 0.75f, 4.0f / 9.0f);
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, (sphereSlices + 1) * 2, sphereStacks);
+#endif
 
 #endif
 
