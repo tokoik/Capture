@@ -2,15 +2,15 @@
 #extension GL_ARB_explicit_attrib_location : enable
 
 // 光源
-const vec4 pl = vec4(3.0, 4.0, 5.0, 1.0);           // 位置
+uniform vec4 pl = vec4(3.0, 4.0, 5.0, 1.0);         // 位置
 
 // 格子間隔
 uniform vec2 spacing = vec2(1.0 / 64.0, 1.0 / 32.0);
 
 // 変換行列
-uniform mat4 mv;                                    // モデルビュー変換行列
-uniform mat4 mp;                                    // プロジェクション変換行列
-uniform mat4 mg;                                    // 法線ベクトルの変換行列
+uniform mat4 mv;                                    // 視野変換行列
+uniform mat4 mp;                                    // 投影変換行列
+uniform mat4 mg;                                    // 法線変換行列
 
 // ラスタライザに送る頂点属性
 out vec3 n;                                         // 頂点の法線ベクトル

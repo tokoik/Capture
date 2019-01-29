@@ -15,32 +15,42 @@
 #include <iostream>
 #include <thread>
 
+//
 // デフォルトコンストラクタ
+//
 Capture::Capture()
 {
 }
 
+//
 // デバイスからキャプチャするコンストラクタ
+//
 Capture::Capture(int device, int width, int height, int fps)
 	: camera(device)
 {
 	init(width, height, fps);
 }
 
+//
 // ファイルからキャプチャするコンストラクタ
+//
 Capture::Capture(const std::string &filename)
 	: camera(filename)
 {
 	init(0, 0, 0);
 }
 
+//
 // デストラクタ
+//
 Capture::~Capture()
 {
 	glDeleteTextures(1, &texture);
 }
 
+//
 // キャプチャ可能なら最初の 1 フレームをキャプチャする
+//
 void Capture::init(int width, int height, int fps)
 {
 	// カメラが使えるかどうか確かめる
@@ -65,30 +75,36 @@ void Capture::init(int width, int height, int fps)
 	glBindTexture(GL_TEXTURE_2D, texture);
   glTexStorage2D(GL_TEXTURE_2D, 4, GL_RGB8, frame.cols, frame.rows);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
 	// テクスチャの境界色
 	static constexpr GLfloat border[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border);
 }
 
+//
 // デバイスを開く
+//
 void Capture::open(int device, int width, int height, int fps)
 {
 	camera.open(device);
 	init(width, height, fps);
 }
 
+//
 // ファイルを開く
+//
 void Capture::open(const std::string &filename)
 {
 	camera.open(filename);
 	init(0, 0, 0);
 }
 
+//
 // 1 フレームキャプチャしてテクスチャに転送する
+//
 void Capture::capture()
 {
 	// 1 フレーム取り込む

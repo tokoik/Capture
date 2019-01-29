@@ -129,15 +129,24 @@
   <ItemGroup>
     <ClCompile Include="app.cpp" />
     <ClCompile Include="Capture.cpp" />
+    <ClCompile Include="Disc.cpp" />
     <ClCompile Include="gg.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Capture.h" />
+    <ClInclude Include="Disc.h" />
     <ClInclude Include="gg.h" />
     <ClInclude Include="GgApplication.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Sphere.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cost.frag" />
+    <None Include="cost.geom" />
+    <None Include="cost.vert" />
     <None Include="disc.vert" />
     <None Include="discCOS.frag" />
     <None Include="discSAD.frag" />

@@ -30,6 +30,15 @@
     <ClCompile Include="Capture.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="Sphere.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Disc.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gg.h">
@@ -39,6 +48,15 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Capture.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Sphere.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Disc.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -62,6 +80,15 @@
       <Filter>シェーダー ファイル</Filter>
     </None>
     <None Include="discSAD.frag">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
+    <None Include="cost.geom">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
+    <None Include="cost.vert">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
+    <None Include="cost.frag">
       <Filter>シェーダー ファイル</Filter>
     </None>
   </ItemGroup>
