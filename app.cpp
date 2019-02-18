@@ -54,7 +54,7 @@ void GgApplication::run()
   const GgMatrix mc(ggIdentity());
 
   // ビデオ入力
-  Capture video0(2, 1280, 720), video1(0, 1280, 720);
+  Capture video0(1, 1280, 720), video1(2, 1280, 720);
 
   // 経過時間のリセット
   glfwSetTime(0.0);
@@ -88,10 +88,10 @@ void GgApplication::run()
     const GgMatrix mp(ggPerspective(0.5f, window.getAspect(), 1.0f, 15.0f));
 
     // 図形の描画
-    //mesh.draw(mp, mv * window.getTrackball());
+    mesh.draw(mp, mv * window.getTrackball());
     //sphere.draw(mp, mv * window.getTrackball());
     //disc.draw(mp, mv * window.getTrackball());
-    cost.draw(mp, mv * window.getTrackball()); window.resetViewport(); test.draw(mp, mv * window.getTrackball(), t);
+    //cost.draw(mp, mv * window.getTrackball()); window.resetViewport(); test.draw(mp, mv * window.getTrackball(), t);
 
     // カラーバッファを入れ替えてイベントを取り出す
     window.swapBuffers();

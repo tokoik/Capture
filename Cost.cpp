@@ -83,8 +83,8 @@ void Cost::draw(const GgMatrix &mp, const GgMatrix &mv) const
 
   // uniform ïœêîÇê›íËÇ∑ÇÈ
   glUniform2f(spacingLoc, 1.0f / slices, 1.0f / stacks);
-  glUniform1i(color0Loc, 0);
-  glUniform1i(color1Loc, 1);
+  glUniform1i(color0Loc, 1);
+  glUniform1i(color1Loc, 0);
   glUniform1f(stepLoc, step);
   glUniform2f(scaleLoc, 0.885f * 0.25f, -0.885f * 4.0f / 9.0f);
 

@@ -40,7 +40,7 @@ void Test::draw(const GgMatrix &mp, const GgMatrix &mv, GLfloat depth) const
   glUniform1i(color1Loc, 1);
 
   // このクラス独自の設定
-  glUniform1f(depthLoc, depth * 320.0);
+  glUniform1f(depthLoc, depth * 320.0f);
 
   // メッシュを描画する
   glBindVertexArray(object);
