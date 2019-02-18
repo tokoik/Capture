@@ -1,5 +1,4 @@
-#version 150 core
-#extension GL_ARB_explicit_attrib_location : enable
+#version 430 core
 
 // 変位量
 uniform float delta;

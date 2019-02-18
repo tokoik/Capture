@@ -129,19 +129,23 @@
   <ItemGroup>
     <ClCompile Include="app.cpp" />
     <ClCompile Include="Capture.cpp" />
+    <ClCompile Include="Cost.cpp" />
     <ClCompile Include="Disc.cpp" />
     <ClCompile Include="gg.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Sphere.cpp" />
+    <ClCompile Include="Test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Capture.h" />
+    <ClInclude Include="Cost.h" />
     <ClInclude Include="Disc.h" />
     <ClInclude Include="gg.h" />
     <ClInclude Include="GgApplication.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Sphere.h" />
+    <ClInclude Include="Test.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cost.frag" />
@@ -154,6 +158,8 @@
     <None Include="mesh.vert" />
     <None Include="sphere.frag" />
     <None Include="sphere.vert" />
+    <None Include="test.frag" />
+    <None Include="test.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

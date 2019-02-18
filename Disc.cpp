@@ -4,10 +4,10 @@
 #include "Disc.h"
 
 // 繰り返しのフレーム数
-constexpr int frames(400);
+constexpr int frames(static_cast<int>(320 * 0.9f));
 
 // ずらす量の最大値
-constexpr GLfloat range(3.1415927f * 0.4f);
+constexpr GLfloat range(1.5707963f * 0.9f);
 
 //
 // コンストラクタ
@@ -42,18 +42,18 @@ void Disc::draw(const GgMatrix &mp, const GgMatrix &mv) const
 
   // uniform 変数を設定する
   glUniform2f(spacingLoc, 1.0f / slices, 1.0f / stacks);
-  glUniform2f(radiusLoc, 0.5f, 0.5f);
-  glUniform2f(scaleLoc, 0.885f * 0.25f, -0.885f * 4.0f / 9.0f);
   glUniformMatrix4fv(mvLoc, 1, GL_FALSE, mv.get());
   glUniformMatrix4fv(mpLoc, 1, GL_FALSE, mp.get());
   glUniformMatrix4fv(mgLoc, 1, GL_FALSE, mg.get());
   glUniform1i(color0Loc, 0);
   glUniform1i(color1Loc, 1);
 
-  // 描画に使う頂点配列オブジェクトの指定
-  glBindVertexArray(object);
+  // このクラス独自の設定
+  glUniform2f(radiusLoc, 0.5f, 0.5f);
+  glUniform2f(scaleLoc, 0.885f * 0.25f, -0.885f * 4.0f / 9.0f);
 
-  // 図形の描画
+  // メッシュを描画する
+  glBindVertexArray(object);
   for (int frame = 0; frame < frames; ++frame)
   {
     glUniform1f(deltaLoc, frame * range / frames);

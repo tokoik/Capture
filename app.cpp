@@ -7,6 +7,12 @@
 // 図形
 #include "Disc.h"
 
+// マッチングコスト
+#include "Cost.h"
+
+// テスト描画
+#include "Test.h"
+
 // 標準ライブラリ
 #include <array>
 #include <vector>
@@ -32,31 +38,17 @@ void GgApplication::run()
   glEnable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
 
-  // 球体描画用のシェーダプログラムを読み込む
-  //const Mesh *const mesh(new Mesh);
-  //const Mesh *const mesh(new Sphere(64, 32));
-  const Mesh *const mesh(new Disc(32, 32));
+  // 図形描画用のシェーダプログラムを読み込む
+  const Mesh mesh;
+  const Sphere sphere(64, 32);
+  const Disc disc(32, 32);
+  const Test test;
+
+  // コスト関数描画用のシェーダを読み込む
+  const Cost cost(32, 23);
 
   // 球のビュー変換行列
   const GgMatrix mv(ggLookat(0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
-
-  // マッチングコストを格納するテクスチャ
-  GLuint cost;
-  glGenTextures(1, &cost);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, cost);
-  glTexStorage3D(GL_TEXTURE_2D_ARRAY, 4, GL_R32F, 640, 640, 320);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  // マッチングコストのレンダリング先のフレームバッファオブジェクト
-  GLuint fb;
-  glGenFramebuffers(1, &fb);
-  glBindFramebuffer(GL_FRAMEBUFFER, fb);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, fb, 0);
-
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   // 背景のモデルビュー投影変換行列
   const GgMatrix mc(ggIdentity());
@@ -89,14 +81,17 @@ void GgApplication::run()
     // 図形の描画
     //
 
-  // 画面を消去する
+    // 画面を消去する
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // 投影変換行列
     const GgMatrix mp(ggPerspective(0.5f, window.getAspect(), 1.0f, 15.0f));
 
     // 図形の描画
-    mesh->draw(mp, mv * window.getTrackball());
+    //mesh.draw(mp, mv * window.getTrackball());
+    //sphere.draw(mp, mv * window.getTrackball());
+    //disc.draw(mp, mv * window.getTrackball());
+    cost.draw(mp, mv * window.getTrackball()); window.resetViewport(); test.draw(mp, mv * window.getTrackball(), t);
 
     // カラーバッファを入れ替えてイベントを取り出す
     window.swapBuffers();

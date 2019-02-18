@@ -3975,6 +3975,8 @@ GLuint gg::ggCreateShader(const char *vsrc, const char *fsrc, const char *gsrc,
 
   if (program > 0)
   {
+    bool status = true;
+
     if (vsrc)
     {
       // バーテックスシェーダのシェーダオブジェクトを作成する
@@ -3985,6 +3987,8 @@ GLuint gg::ggCreateShader(const char *vsrc, const char *fsrc, const char *gsrc,
       // バーテックスシェーダのシェーダオブジェクトをプログラムオブジェクトに組み込む
       if (printShaderInfoLog(vertShader, vtext))
         glAttachShader(program, vertShader);
+      else
+        status = false;
       glDeleteShader(vertShader);
     }
 
@@ -3998,6 +4002,8 @@ GLuint gg::ggCreateShader(const char *vsrc, const char *fsrc, const char *gsrc,
       // フラグメントシェーダのシェーダオブジェクトをプログラムオブジェクトに組み込む
       if (printShaderInfoLog(fragShader, ftext))
         glAttachShader(program, fragShader);
+      else
+        status = false;
       glDeleteShader(fragShader);
     }
 
@@ -4011,6 +4017,8 @@ GLuint gg::ggCreateShader(const char *vsrc, const char *fsrc, const char *gsrc,
       // ジオメトリシェーダのシェーダオブジェクトをプログラムオブジェクトに組み込む
       if (printShaderInfoLog(geomShader, gtext))
         glAttachShader(program, geomShader);
+      else
+        status = false;
       glDeleteShader(geomShader);
     }
 
@@ -4018,19 +4026,20 @@ GLuint gg::ggCreateShader(const char *vsrc, const char *fsrc, const char *gsrc,
     if (nvarying > 0)
       glTransformFeedbackVaryings(program, nvarying, varyings, GL_SEPARATE_ATTRIBS);
 
-    // シェーダプログラムをリンクする
-    glLinkProgram(program);
-
-    // プログラムオブジェクトが作成できなければ 0 を返す
-    if (printProgramInfoLog(program) == GL_FALSE)
+    // 全てのシェーダオブジェクトのコンパイルに成功したら
+    if (status)
     {
-      glDeleteProgram(program);
-      return 0;
+      // シェーダプログラムをリンクする
+      glLinkProgram(program);
+
+      // リンクに成功したらプログラムオブジェクト名を返す
+      if (printProgramInfoLog(program) != GL_FALSE) return program;
     }
   }
 
-  // プログラムオブジェクトを返す
-  return program;
+  // プログラムオブジェクトが作成できなかった
+  glDeleteProgram(program);
+  return 0;
 }
 
 /*

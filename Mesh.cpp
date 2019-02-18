@@ -14,7 +14,7 @@ Mesh::Mesh(int slices, int stacks, const char *vert, const char *frag, const cha
   , mgLoc(glGetUniformLocation(shader, "mg"))
   , color0Loc(glGetUniformLocation(shader, "color0"))
   , color1Loc(glGetUniformLocation(shader, "color1"))
-  , object([]() { GLuint vao; glGenVertexArrays(1, &vao); return vao; } ())
+  , object([] { GLuint vao; glGenVertexArrays(1, &vao); return vao; } ())
   , slices(slices), stacks(stacks)
 {
   if (shader == 0) throw std::runtime_error("Can't create the shader program object.");
@@ -25,6 +25,11 @@ Mesh::Mesh(int slices, int stacks, const char *vert, const char *frag, const cha
 //
 Mesh::~Mesh()
 {
+  // プログラムオブジェクトを削除する
+  glDeleteProgram(shader);
+
+  // 頂点配列オブジェクトを削除する
+  glDeleteVertexArrays(1, &object);
 }
 
 //
